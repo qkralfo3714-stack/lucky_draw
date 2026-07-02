@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>추억의 뽑기왕</title>
+<style>
+@font-face {
+  font-family: 'RoundedFixedsys';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff') format('woff');
+  font-weight: normal;
+  font-display: swap;
+}
+
+:root{
+  --paper:#f6eccf;
+  --paper-2:#efdfb6;
+  --frame:#5bbcbb;
+  --frame-dark:#3a9c9a;
+  --red:#d83a2c;
+  --red-dark:#a3271c;
+  --red-panel:#cf3226;
+  --yellow:#f6c518;
+  --green:#2fa46a;
+  --blue:#2b7fc4;
+  --purple:#7a4fb0;
+  --navy:#1e2a54;
+  --ink:#2a2016;
+  --ray:#f7e6bc;
+  --gold:#f6c518;
+}
+
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+html,body{ margin:0; padding:0; }
+
+body{
+  font-family:'RoundedFixedsys', 'Courier New', monospace;
+  background:
+    repeating-linear-gradient(135deg, #d8f0ef 0 14px, #cdebe9 14px 28px);
+  color:var(--ink);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:18px 12px 40px;
+  line-height:1.4;
+}
+
+/* ---------- top toolbar ---------- */
+.toolbar{
+  width:100%;
+  max-width:520px;
+  display:flex;
+  gap:8px;
+  margin-bottom:14px;
+  flex-wrap:wrap;
+}
+.btn{
+  font-family:inherit;
+  font-size:15px;
+  cursor:pointer;
+  border:3px solid var(--ink);
+  border-radius:12px;
+  padding:9px 14px;
+  background:var(--paper);
+  color:var(--ink);
+  box-shadow:3px 3px 0 var(--ink);
+  transition:transform .06s ease, box-shadow .06s ease;
+  user-select:none;
+}
+.btn:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+.btn.primary{ background:var(--red); color:#fff; }
+.btn.blue{ background:var(--blue); color:#fff; }
+.btn.icon{ padding:9px 12px; }
+.btn:disabled{ opacity:.45; cursor:not-allowed; }
+.spacer{ flex:1; }
+
+/* ---------- poster frame ---------- */
+.frame{
+  width:100%;
+  max-width:520px;
+  background:linear-gradient(160deg, var(--frame), var(--frame-dark));
+  border:4px solid var(--ink);
+  border-radius:22px;
+  padding:14px;
+  box-shadow:8px 8px 0 rgba(0,0,0,.28);
+}
+.poster{
+  position:relative;
+  background:var(--paper);
+  border:3px solid var(--ink);
+  border-radius:14px;
+  padding:0 16px 18px;
+  overflow:hidden;
+}
+
+/* sunburst behind banner */
+.rays{
+  position:absolute;
+  top:-140px; left:50%;
+  width:640px; height:640px;
+  transform:translateX(-50%);
+  background:repeating-conic-gradient(from 0deg at 50% 50%,
+    var(--ray) 0deg 9deg, transparent 9deg 18deg);
+  opacity:.7;
+  z-index:0;
+  pointer-events:none;
+}
+.poster > *:not(.rays){ position:relative; z-index:1; }
+
+/* ---------- banner ---------- */
+.banner-wrap{ padding:16px 0 4px; display:flex; justify-content:center; }
+.banner{
+  position:relative;
+  background:linear-gradient(180deg,#e94b3c,#c0281c);
+  color:var(--yellow);
+  font-size:34px;
+  letter-spacing:2px;
+  padding:12px 34px;
+  border:3px solid var(--ink);
+  border-radius:8px;
+  text-align:center;
+  text-shadow:2px 2px 0 var(--red-dark), -1px -1px 0 var(--red-dark);
+  box-shadow:0 4px 0 var(--red-dark), inset 0 0 0 3px rgba(255,255,255,.12);
+}
+/* ribbon tails */
+.banner::before, .banner::after{
+  content:"";
+  position:absolute;
+  top:50%;
+  width:26px; height:100%;
+  background:var(--red-dark);
+  border:3px solid var(--ink);
+  transform:translateY(-50%);
+  z-index:-1;
+}
+.banner::before{ left:-22px; clip-path:polygon(0 0,100% 0,100% 100%,0 100%,30% 50%); }
+.banner::after{ right:-22px; clip-path:polygon(0 0,100% 0,70% 50%,100% 100%,0 100%); }
+
+/* ---------- hero illustration (compact) ---------- */
+.hero{
+  margin:4px 0 0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.hero .art{ width:100%; max-width:340px; height:auto; display:block; overflow:visible; }
+.hero .spark{ transform-box:fill-box; transform-origin:center; animation:twinkle 1.7s ease-in-out infinite; }
+.hero .glint{ animation:glint 1.5s ease-in-out infinite; }
+@keyframes twinkle{ 0%,100%{ opacity:.25; transform:scale(.55); } 50%{ opacity:1; transform:scale(1.15); } }
+@keyframes glint{ 0%,100%{ opacity:.2; } 50%{ opacity:1; } }
+
+/* ---------- prize boxes ---------- */
+.prizes{
+  display:flex;
+  gap:6px;
+  margin:8px 0 12px;
+  overflow-x:auto;
+  padding-bottom:4px;
+}
+.prize{
+  flex:1 1 0;
+  min-width:74px;
+  display:flex;
+  flex-direction:column;
+}
+.prize .tag{
+  align-self:flex-start;
+  font-size:14px;
+  color:#fff;
+  padding:3px 10px;
+  border:2.5px solid var(--ink);
+  border-radius:8px 8px 0 0;
+  border-bottom:none;
+  position:relative;
+  top:2px;
+  text-shadow:1px 1px 0 rgba(0,0,0,.3);
+}
+.prize .box{
+  background:#fff;
+  border:2.5px solid var(--ink);
+  border-radius:0 10px 10px 10px;
+  min-height:78px;
+  padding:8px 6px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  text-align:center;
+  position:relative;
+}
+.prize .name{ font-size:14px; word-break:keep-all; }
+.prize .left{ font-size:12px; color:#666; }
+.prize.done .box{ background:#f0efe6; }
+.prize.done .box::after{
+  content:"완료";
+  position:absolute;
+  color:var(--red);
+  border:3px solid var(--red);
+  border-radius:8px;
+  padding:2px 8px;
+  font-size:16px;
+  transform:rotate(-14deg);
+  opacity:.85;
+}
+.prize.done .name, .prize.done .left{ opacity:.35; }
+
+/* ---------- lottery grid ---------- */
+.grid-panel{
+  background:linear-gradient(180deg,#d83a2c,#b62b1f);
+  border:4px solid var(--ink);
+  border-radius:12px;
+  padding:12px;
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.12);
+}
+.grid{
+  display:grid;
+  gap:8px;
+}
+.paper{
+  position:relative;
+  aspect-ratio:1/1;
+  border:3px solid var(--red-dark);
+  border-radius:8px;
+  background:linear-gradient(145deg,#ff6b52,#e8412f);
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:rgba(255,255,255,.85);
+  transition:transform .12s ease, filter .12s ease;
+  overflow:hidden;
+  box-shadow:inset 0 -3px 6px rgba(0,0,0,.18);
+}
+.paper::before{ /* folded corner */
+  content:"";
+  position:absolute;
+  top:0; left:0;
+  border-width:0 0 12px 12px;
+  border-style:solid;
+  border-color:transparent transparent transparent rgba(0,0,0,.2);
+}
+.paper .mark{ font-size:clamp(13px, 3.4vw, 20px); }
+.paper:not(.opened):hover{ transform:translateY(-3px) rotate(-2deg); filter:brightness(1.08); z-index:2; }
+.paper.opened{ cursor:default; box-shadow:inset 0 2px 5px rgba(0,0,0,.25); }
+.paper.opened.win{ background:linear-gradient(145deg,#ffe27a,#f6c518); color:var(--ink); border-color:#b8900a; }
+.paper.opened.blank{ background:#8f342a; color:rgba(255,255,255,.5); border-color:#5f2019; }
+.paper.opened .mark{ font-size:clamp(11px, 3vw, 17px); }
+
+.footnote{
+  text-align:center;
+  font-size:12px;
+  color:#7a6a4c;
+  margin-top:12px;
+}
+
+/* maker / credit line on the teal frame */
+.credit{
+  text-align:center;
+  margin:12px 4px 2px;
+  min-height:1px;
+}
+.credit .tag{
+  display:inline-block;
+  background:var(--paper);
+  border:2.5px solid var(--ink);
+  border-radius:22px;
+  padding:6px 18px;
+  font-size:14px;
+  color:var(--ink);
+  box-shadow:2px 2px 0 rgba(0,0,0,.22);
+  transform:rotate(-1.4deg);
+  max-width:100%;
+  word-break:keep-all;
+}
+
+/* ---------- modals ---------- */
+.overlay{
+  position:fixed; inset:0;
+  background:rgba(20,14,8,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+  z-index:50;
+}
+.overlay.show{ display:flex; }
+
+.sheet{
+  width:100%;
+  max-width:440px;
+  max-height:88vh;
+  overflow-y:auto;
+  background:var(--paper);
+  border:4px solid var(--ink);
+  border-radius:18px;
+  box-shadow:8px 8px 0 rgba(0,0,0,.3);
+  padding:20px;
+}
+.sheet h2{
+  margin:0 0 4px;
+  font-size:24px;
+  color:var(--red);
+  text-align:center;
+}
+.sheet .sub{ text-align:center; font-size:13px; color:#7a6a4c; margin-bottom:16px; }
+
+.field{ margin-bottom:14px; }
+.field label{ display:block; font-size:14px; margin-bottom:5px; }
+.field input[type=number], .field input[type=text]{
+  font-family:inherit;
+  font-size:15px;
+  width:100%;
+  padding:8px 10px;
+  border:2.5px solid var(--ink);
+  border-radius:8px;
+  background:#fff;
+}
+
+.prize-editor{ border-top:2px dashed #cbb98e; padding-top:10px; }
+.prize-editor .head{ display:flex; font-size:12px; color:#7a6a4c; gap:6px; margin-bottom:6px; padding:0 2px; }
+.prize-editor .head .c1{ flex:0 0 44px; }
+.prize-editor .head .c2{ flex:1; }
+.prize-editor .head .c3{ flex:0 0 66px; }
+.prize-editor .head .c4{ flex:0 0 34px; }
+
+.prow{ display:flex; gap:6px; align-items:center; margin-bottom:7px; }
+.prow .rank{
+  flex:0 0 44px; text-align:center; color:#fff;
+  border:2.5px solid var(--ink); border-radius:8px; padding:7px 0; font-size:14px;
+}
+.prow input.pname{ flex:1; min-width:0; padding:7px 8px; border:2.5px solid var(--ink); border-radius:8px; font-family:inherit; font-size:14px; }
+.prow input.pcount{ flex:0 0 66px; padding:7px 6px; border:2.5px solid var(--ink); border-radius:8px; font-family:inherit; font-size:14px; text-align:center; }
+.prow .del{
+  flex:0 0 34px; height:36px; border:2.5px solid var(--ink); border-radius:8px;
+  background:#fff; cursor:pointer; font-family:inherit; font-size:16px; line-height:1;
+}
+.prow .del:active{ background:#f0dcd8; }
+
+.summary{
+  background:#fff; border:2.5px solid var(--ink); border-radius:10px;
+  padding:10px 12px; font-size:13px; margin:12px 0;
+  display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;
+}
+.summary b{ color:var(--red); }
+.summary.error{ background:#ffe6e2; }
+.summary.error b{ color:var(--red-dark); }
+
+.sheet-actions{ display:flex; gap:8px; margin-top:6px; }
+.sheet-actions .btn{ flex:1; text-align:center; }
+
+/* ---------- reveal modal ---------- */
+.reveal{
+  text-align:center;
+  perspective:900px;
+}
+.reveal .card{
+  display:inline-block;
+  min-width:230px;
+  padding:26px 30px;
+  border:4px solid var(--ink);
+  border-radius:16px;
+  transform-origin:top center;
+  animation:unfold .5s cubic-bezier(.4,1.5,.5,1) both;
+}
+@keyframes unfold{
+  0%{ transform:rotateX(-92deg) scale(.9); opacity:0; }
+  100%{ transform:rotateX(0) scale(1); opacity:1; }
+}
+.reveal .card.win{ background:linear-gradient(180deg,#fff2c2,#f6c518); }
+.reveal .card.blank{ background:linear-gradient(180deg,#f3e7cf,#e2d3b0); }
+.reveal .big{ font-size:52px; line-height:1; margin-bottom:8px; }
+.reveal .rank-line{ font-size:30px; color:var(--red); }
+.reveal .prize-line{ font-size:22px; margin-top:6px; }
+.reveal .blank-line{ font-size:34px; color:#7a6a4c; }
+.reveal .card.win .prize-line{ color:var(--ink); }
+.reveal .btn{ margin-top:20px; }
+
+/* confetti */
+.confetti{
+  position:fixed; top:-16px; width:10px; height:16px;
+  z-index:60; pointer-events:none; border-radius:2px;
+  animation:fall linear forwards;
+}
+@keyframes fall{
+  to{ transform:translateY(105vh) rotate(720deg); opacity:.9; }
+}
+
+@media (max-width:480px){
+  .banner{ font-size:26px; padding:10px 24px; }
+}
+@media (prefers-reduced-motion:reduce){
+  *{ animation-duration:.001s !important; transition:none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button class="btn primary" id="btnSettings">⚙ 상품 · 개수 설정</button>
+  <button class="btn blue" id="btnRestart">🔄 새 판 시작</button>
+  <span class="spacer"></span>
+  <button class="btn icon" id="btnSound" title="소리 켜기/끄기">🔊</button>
+</div>
+
+<div class="frame">
+  <div class="poster">
+    <div class="rays"></div>
+
+    <div class="banner-wrap">
+      <div class="banner">추억의 뽑기왕</div>
+    </div>
+
+    <div class="hero">
+      <svg class="art" viewBox="0 0 360 116" aria-hidden="true">
+        <!-- ground shadow -->
+        <ellipse cx="180" cy="105" rx="120" ry="6" fill="rgba(0,0,0,.12)"/>
+
+        <!-- tickets popping out of the main box -->
+        <g stroke="#2a2016" stroke-width="2.4" stroke-linejoin="round">
+          <g transform="rotate(-18 152 62)">
+            <rect x="143" y="26" width="18" height="38" rx="3.5" fill="#2b7fc4"/>
+            <text x="152" y="50" font-size="15" text-anchor="middle" fill="#fff" font-family="RoundedFixedsys,monospace">?</text>
+          </g>
+          <g transform="rotate(-3 174 62)">
+            <rect x="165" y="20" width="18" height="44" rx="3.5" fill="#2fa46a"/>
+            <path d="M174 34 l2.4 6.6 h6.6 l-5.3 4.3 2 6.6 -5.7-4 -5.7 4 2-6.6 -5.3-4.3 h6.6 z" fill="#fff"/>
+          </g>
+          <g transform="rotate(12 198 62)">
+            <rect x="189" y="24" width="18" height="40" rx="3.5" fill="#f6c518"/>
+            <text x="198" y="50" font-size="15" text-anchor="middle" fill="#2a2016" font-family="RoundedFixedsys,monospace">?</text>
+          </g>
+        </g>
+
+        <!-- small gifts scattered around -->
+        <g stroke="#2a2016" stroke-width="2.2" stroke-linejoin="round">
+          <!-- left (purple) -->
+          <rect x="78" y="82" width="28" height="21" rx="3" fill="#7a4fb0"/>
+          <rect x="89" y="82" width="6" height="21" fill="#f6c518"/>
+          <rect x="74" y="75" width="36" height="8" rx="2" fill="#5f3a8a"/>
+          <path d="M92 75 l-8 -5 v9 z" fill="#f6c518"/>
+          <path d="M92 75 l8 -5 v9 z" fill="#f6c518"/>
+          <circle cx="92" cy="75" r="2.6" fill="#e94b3c" stroke-width="1.6"/>
+          <!-- left small (blue) -->
+          <rect x="114" y="89" width="20" height="14" rx="2" fill="#2b7fc4"/>
+          <rect x="121" y="89" width="5" height="14" fill="#f6c518"/>
+          <rect x="111" y="83" width="26" height="6" rx="2" fill="#1e5f96"/>
+          <path d="M124 83 l-6 -4 v7 z" fill="#f6c518"/>
+          <path d="M124 83 l6 -4 v7 z" fill="#f6c518"/>
+          <!-- right (green) -->
+          <rect x="254" y="82" width="28" height="21" rx="3" fill="#2fa46a"/>
+          <rect x="265" y="82" width="6" height="21" fill="#f6c518"/>
+          <rect x="250" y="75" width="36" height="8" rx="2" fill="#1f7a4d"/>
+          <path d="M268 75 l-8 -5 v9 z" fill="#f6c518"/>
+          <path d="M268 75 l8 -5 v9 z" fill="#f6c518"/>
+          <circle cx="268" cy="75" r="2.6" fill="#e94b3c" stroke-width="1.6"/>
+          <!-- right small (red) -->
+          <rect x="222" y="89" width="20" height="14" rx="2" fill="#e94b3c"/>
+          <rect x="229" y="89" width="5" height="14" fill="#f6c518"/>
+          <rect x="219" y="83" width="26" height="6" rx="2" fill="#a3271c"/>
+          <path d="M232 83 l-6 -4 v7 z" fill="#f6c518"/>
+          <path d="M232 83 l6 -4 v7 z" fill="#f6c518"/>
+        </g>
+
+        <!-- main gift box -->
+        <rect x="147" y="68" width="66" height="34" rx="4" fill="#e94b3c" stroke="#2a2016" stroke-width="2.6"/>
+        <rect x="174" y="68" width="12" height="34" fill="#f6c518" stroke="#2a2016" stroke-width="2.6"/>
+        <rect x="141" y="59" width="78" height="13" rx="3" fill="#c0281c" stroke="#2a2016" stroke-width="2.6"/>
+        <rect x="172" y="59" width="16" height="13" fill="#f6c518" stroke="#2a2016" stroke-width="2.6"/>
+        <path d="M180 59 C166 49 166 42 176 45 C182 47 180 56 180 59 Z" fill="#f6c518" stroke="#2a2016" stroke-width="2.2"/>
+        <path d="M180 59 C194 49 194 42 184 45 C178 47 180 56 180 59 Z" fill="#f6c518" stroke="#2a2016" stroke-width="2.2"/>
+        <circle cx="180" cy="53" r="4.2" fill="#e94b3c" stroke="#2a2016" stroke-width="2.2"/>
+
+        <!-- big corner stars -->
+        <path d="M32 40 l5 12 13 1 -10 9 3 13 -11-7 -11 7 3-13 -10-9 13-1 z" fill="#f6c518" stroke="#2a2016" stroke-width="2.6" stroke-linejoin="round"/>
+        <path d="M330 42 l5 12 13 1 -10 9 3 13 -11-7 -11 7 3-13 -10-9 13-1 z" fill="#f6c518" stroke="#2a2016" stroke-width="2.6" stroke-linejoin="round"/>
+
+        <!-- twinkling sparkles -->
+        <g fill="#fff" stroke="#f6c518" stroke-width="1.3">
+          <g transform="translate(54 58)"><path class="spark" style="animation-delay:0s"   d="M0 -7 L1.8 -1.8 L7 0 L1.8 1.8 L0 7 L-1.8 1.8 L-7 0 L-1.8 -1.8 Z"/></g>
+          <g transform="translate(308 60)"><path class="spark" style="animation-delay:.5s" d="M0 -7 L1.8 -1.8 L7 0 L1.8 1.8 L0 7 L-1.8 1.8 L-7 0 L-1.8 -1.8 Z"/></g>
+          <g transform="translate(150 16)"><path class="spark" style="animation-delay:.9s" d="M0 -6 L1.5 -1.5 L6 0 L1.5 1.5 L0 6 L-1.5 1.5 L-6 0 L-1.5 -1.5 Z"/></g>
+          <g transform="translate(210 14)"><path class="spark" style="animation-delay:1.3s" d="M0 -6 L1.5 -1.5 L6 0 L1.5 1.5 L0 6 L-1.5 1.5 L-6 0 L-1.5 -1.5 Z"/></g>
+          <g transform="translate(120 64)"><path class="spark" style="animation-delay:.3s" d="M0 -5 L1.3 -1.3 L5 0 L1.3 1.3 L0 5 L-1.3 1.3 L-5 0 L-1.3 -1.3 Z"/></g>
+          <g transform="translate(246 60)"><path class="spark" style="animation-delay:1.1s" d="M0 -5 L1.3 -1.3 L5 0 L1.3 1.3 L0 5 L-1.3 1.3 L-5 0 L-1.3 -1.3 Z"/></g>
+        </g>
+
+        <!-- glint dots -->
+        <circle class="glint" style="animation-delay:0s"  cx="20"  cy="72" r="2.6" fill="#e94b3c"/>
+        <circle class="glint" style="animation-delay:.6s" cx="342" cy="74" r="2.6" fill="#2b7fc4"/>
+        <circle class="glint" style="animation-delay:.9s" cx="70"  cy="46" r="2.2" fill="#2fa46a"/>
+        <circle class="glint" style="animation-delay:.4s" cx="292" cy="46" r="2.2" fill="#f6c518"/>
+      </svg>
+    </div>
+
+    <div class="prizes" id="prizes"><!-- prize boxes injected --></div>
+
+    <div class="grid-panel">
+      <div class="grid" id="grid"><!-- papers injected --></div>
+    </div>
+
+    <div class="footnote">🎯 남은 뽑기 <b id="cntNum">0</b>장 / 총 <span id="footTotal">0</span>장 · 종이를 골라 톡! 뽑아보세요</div>
+  </div>
+  <div class="credit" id="credit"></div>
+</div>
+
+<!-- Settings modal -->
+<div class="overlay" id="settingsOverlay">
+  <div class="sheet">
+    <h2>뽑기 설정</h2>
+    <p class="sub">총 개수와 상품을 자유롭게 바꿔보세요</p>
+
+    <div class="field">
+      <label for="totalInput">총 뽑기 개수 (종이 장 수)</label>
+      <input type="number" id="totalInput" min="1" max="600" value="100">
+    </div>
+
+    <div class="prize-editor">
+      <div class="head">
+        <span class="c1">등수</span>
+        <span class="c2">상품 이름</span>
+        <span class="c3">개수</span>
+        <span class="c4"></span>
+      </div>
+      <div id="prizeRows"></div>
+      <button class="btn" id="btnAddPrize" style="width:100%;margin-top:4px;">＋ 상품 추가</button>
+    </div>
+
+    <div class="summary" id="summary"></div>
+
+    <div class="sheet-actions">
+      <button class="btn" id="btnCancel">취소</button>
+      <button class="btn primary" id="btnApply">이 설정으로 시작</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reveal modal -->
+<div class="overlay" id="revealOverlay">
+  <div class="reveal" id="revealContent"></div>
+</div>
+
+<script>
+"use strict";
+
+const RANK_COLORS = ['#d83a2c','#f6c518','#2fa46a','#2b7fc4','#7a4fb0','#e07b1a','#c0398c','#0d9488'];
+
+// ---- state ----
+let config = {
+  total: 100,
+  // ▼▼▼ 만든 사람 문구는 여기서만 수정하세요 (앱 설정에서는 못 바꿉니다) ▼▼▼
+  credit: '만든 사람: ○○○',
+  // ▲▲▲ 위 따옴표 안 내용을 원하는 문구로 바꾸면 됩니다 ▲▲▲
+  prizes: [
+    { name:'특별상 🎁', count:1 },
+    { name:'금상 🥇',   count:2 },
+    { name:'은상 🥈',   count:3 },
+    { name:'동상 🥉',   count:5 },
+    { name:'참가상 🍬', count:12 },
+  ],
+};
+let papers = [];      // {prizeIndex:number|null, opened:bool}
+let wonByPrize = [];  // count won per prize
+let soundOn = true;
+let audioCtx = null;
+
+// ---- helpers ----
+const $ = (id) => document.getElementById(id);
+const rankColor = (i) => RANK_COLORS[i % RANK_COLORS.length];
+
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+
+function beep(win){
+  if(!soundOn) return;
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const now = audioCtx.currentTime;
+    const notes = win ? [523,659,784,1047] : [220,180];
+    notes.forEach((f,i)=>{
+      const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+      o.type = win ? 'triangle' : 'sawtooth';
+      o.frequency.value=f;
+      const t=now+i*(win?0.09:0.12);
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.25,t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+(win?0.15:0.18));
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t); o.stop(t+0.2);
+    });
+  }catch(e){}
+}
+
+function confettiBurst(){
+  const colors=['#d83a2c','#f6c518','#2fa46a','#2b7fc4','#7a4fb0','#fff'];
+  for(let i=0;i<70;i++){
+    const c=document.createElement('div');
+    c.className='confetti';
+    c.style.left=Math.random()*100+'vw';
+    c.style.background=colors[Math.floor(Math.random()*colors.length)];
+    c.style.animationDuration=(1.6+Math.random()*1.4)+'s';
+    c.style.animationDelay=(Math.random()*0.3)+'s';
+    c.style.transform='rotate('+Math.random()*360+'deg)';
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),3400);
+  }
+}
+
+// ---- build a new board from config ----
+function buildBoard(){
+  const pool=[];
+  config.prizes.forEach((p,idx)=>{
+    for(let k=0;k<p.count;k++) pool.push(idx);
+  });
+  while(pool.length < config.total) pool.push(null); // 꽝
+  pool.length = config.total; // trim if prizes exceeded total (safety)
+  shuffle(pool);
+  papers = pool.map(pi => ({ prizeIndex:pi, opened:false }));
+  wonByPrize = config.prizes.map(()=>0);
+  render();
+}
+
+// ---- render ----
+function chooseCols(n){
+  // fewer columns => bigger papers
+  if(n<=6)  return Math.max(2, n);
+  if(n<=12) return 4;
+  if(n<=20) return 5;
+  if(n<=36) return 6;
+  if(n<=56) return 7;
+  if(n<=90) return 8;
+  if(n<=120) return 9;
+  if(n<=180) return 10;
+  if(n<=252) return 12;
+  return 14;
+}
+
+function render(){
+  // grid
+  const grid=$('grid');
+  grid.style.gridTemplateColumns = `repeat(${chooseCols(papers.length)}, 1fr)`;
+  grid.innerHTML='';
+  papers.forEach((pp,i)=>{
+    const d=document.createElement('div');
+    d.className='paper'+(pp.opened?(pp.prizeIndex!=null?' opened win':' opened blank'):'');
+    d.dataset.i=i;
+    if(pp.opened){
+      d.innerHTML = pp.prizeIndex!=null
+        ? `<span class="mark">${pp.prizeIndex+1}등</span>`
+        : `<span class="mark">✕</span>`;
+    }else{
+      d.innerHTML = `<span class="mark">${i+1}</span>`;
+    }
+    grid.appendChild(d);
+  });
+
+  // prize boxes
+  const box=$('prizes');
+  box.innerHTML='';
+  config.prizes.forEach((p,idx)=>{
+    const left = p.count - wonByPrize[idx];
+    const done = left<=0;
+    const el=document.createElement('div');
+    el.className='prize'+(done?' done':'');
+    el.innerHTML=`
+      <span class="tag" style="background:${rankColor(idx)}">${idx+1}등</span>
+      <div class="box">
+        <div class="name">${escapeHtml(p.name)||'-'}</div>
+        <div class="left">남은 ${Math.max(0,left)} / ${p.count}</div>
+      </div>`;
+    box.appendChild(el);
+  });
+
+  // counter
+  const remaining = papers.filter(p=>!p.opened).length;
+  $('cntNum').textContent = remaining;
+  $('footTotal').textContent = papers.length;
+
+  // maker / credit line
+  const credit = (config.credit||'').trim();
+  $('credit').innerHTML = credit ? `<span class="tag">${escapeHtml(credit)}</span>` : '';
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, m=>(
+    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]
+  ));
+}
+
+// ---- draw a paper ----
+function openPaper(i){
+  const pp=papers[i];
+  if(pp.opened) return;
+  pp.opened=true;
+
+  let win=false;
+  if(pp.prizeIndex!=null){
+    win=true;
+    wonByPrize[pp.prizeIndex]++;
+  }
+  render();
+  beep(win);
+  showReveal(pp.prizeIndex, win);
+}
+
+function showReveal(prizeIndex, win){
+  const c=$('revealContent');
+  if(win){
+    const p=config.prizes[prizeIndex];
+    c.innerHTML=`
+      <div class="card win">
+        <div class="big">🎉</div>
+        <div class="rank-line">${prizeIndex+1}등 당첨!</div>
+        <div class="prize-line">${escapeHtml(p.name)}</div>
+        <button class="btn primary" id="btnCloseReveal">확인</button>
+      </div>`;
+    confettiBurst();
+  }else{
+    c.innerHTML=`
+      <div class="card blank">
+        <div class="big">😅</div>
+        <div class="blank-line">꽝!</div>
+        <div class="prize-line">다음 기회에…</div>
+        <button class="btn" id="btnCloseReveal">확인</button>
+      </div>`;
+  }
+  $('revealOverlay').classList.add('show');
+  $('btnCloseReveal').onclick=()=>$('revealOverlay').classList.remove('show');
+}
+
+// ---- settings UI ----
+function openSettings(){
+  $('totalInput').value = config.total;
+  renderPrizeRows();
+  updateSummary();
+  $('settingsOverlay').classList.add('show');
+}
+function closeSettings(){ $('settingsOverlay').classList.remove('show'); }
+
+function renderPrizeRows(){
+  const wrap=$('prizeRows');
+  wrap.innerHTML='';
+  config.prizes.forEach((p,idx)=>{
+    const row=document.createElement('div');
+    row.className='prow';
+    row.innerHTML=`
+      <div class="rank" style="background:${rankColor(idx)}">${idx+1}등</div>
+      <input class="pname" type="text" value="${escapeHtml(p.name)}" placeholder="상품 이름" data-i="${idx}">
+      <input class="pcount" type="number" min="0" value="${p.count}" data-i="${idx}">
+      <button class="del" data-i="${idx}" title="삭제">✕</button>`;
+    wrap.appendChild(row);
+  });
+
+  wrap.querySelectorAll('.pname').forEach(inp=>{
+    inp.oninput=e=>{ config.prizes[+e.target.dataset.i].name=e.target.value; };
+  });
+  wrap.querySelectorAll('.pcount').forEach(inp=>{
+    inp.oninput=e=>{
+      config.prizes[+e.target.dataset.i].count=Math.max(0,parseInt(e.target.value)||0);
+      updateSummary();
+    };
+  });
+  wrap.querySelectorAll('.del').forEach(b=>{
+    b.onclick=e=>{
+      config.prizes.splice(+e.target.dataset.i,1);
+      renderPrizeRows(); updateSummary();
+    };
+  });
+}
+
+function updateSummary(){
+  const total=parseInt($('totalInput').value)||0;
+  const prizeSum=config.prizes.reduce((s,p)=>s+p.count,0);
+  const blanks=total-prizeSum;
+  const s=$('summary');
+  if(blanks<0){
+    s.className='summary error';
+    s.innerHTML=`<span><b>상품이 총 개수보다 많아요!</b></span><span>상품 ${prizeSum} / 총 ${total}</span>`;
+    $('btnApply').disabled=true;
+  }else{
+    s.className='summary';
+    s.innerHTML=`<span>상품 <b>${prizeSum}</b>개</span><span>꽝 <b>${blanks}</b>개</span><span>총 <b>${total}</b>장</span>`;
+    $('btnApply').disabled=false;
+  }
+}
+
+// ---- events ----
+$('grid').addEventListener('click', e=>{
+  const cell=e.target.closest('.paper');
+  if(cell) openPaper(+cell.dataset.i);
+});
+
+$('btnSettings').onclick=openSettings;
+$('btnCancel').onclick=closeSettings;
+$('btnAddPrize').onclick=()=>{
+  config.prizes.push({name:'상품 '+(config.prizes.length+1), count:1});
+  renderPrizeRows(); updateSummary();
+};
+$('totalInput').oninput=updateSummary;
+
+$('btnApply').onclick=()=>{
+  config.total=Math.max(1,parseInt($('totalInput').value)||1);
+  config.prizes=config.prizes.filter(p=>p.name.trim()!=='' || p.count>0);
+  closeSettings();
+  buildBoard();
+};
+
+$('btnRestart').onclick=()=>{
+  if(papers.some(p=>p.opened)){
+    if(!confirm('현재 판을 지우고 같은 설정으로 새로 시작할까요?')) return;
+  }
+  buildBoard();
+};
+
+$('btnSound').onclick=()=>{
+  soundOn=!soundOn;
+  $('btnSound').textContent=soundOn?'🔊':'🔇';
+};
+
+// close overlays on backdrop click
+$('settingsOverlay').addEventListener('click',e=>{ if(e.target.id==='settingsOverlay') closeSettings(); });
+$('revealOverlay').addEventListener('click',e=>{ if(e.target.id==='revealOverlay') $('revealOverlay').classList.remove('show'); });
+
+// ---- init ----
+buildBoard();
+</script>
+</body>
+</html>
